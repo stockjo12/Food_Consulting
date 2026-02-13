@@ -22,7 +22,7 @@ food <- vroom::vroom("FoodExpenses.txt") |>
 ### Relationship Between Income and Food Expenditures
 
 ```{r}
-
+### aldsfjkl
 ```
 
 ### Healthy Economy
