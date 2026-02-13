@@ -1,0 +1,52 @@
+---
+title: "Food Consulting"
+author: "Cooper Riggs & Stockton Nelson"
+format: pdf
+editor: visual
+---
+
+## Setup
+
+```{r}
+#Downloading Libraries
+library(tidyverse)
+
+#Bringing in Data
+food <- vroom::vroom("FoodExpenses.txt") |>
+  janitor::clean_names() |>
+  rename(eating = eating_out)
+```
+
+## Problem 2 (Cooper)
+
+### Relationship Between Income and Food Expenditures
+
+```{r}
+
+```
+
+### Healthy Economy
+
+```{r}
+
+```
+
+### Predictions
+
+```{r}
+
+```
+
+## Problem 3 (Stockton)
+
+### Problems with Standard Regression
+
+```{r}
+
+```
+
+### Validate Unequal Variance Model
+
+```{r}
+
+```
