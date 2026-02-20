@@ -22,7 +22,7 @@ food <- vroom::vroom("FoodExpenses.txt") |>
 ### Relationship Between Income and Food Expenditures
 
 ```{r}
-### aldsfjkl
+
 ```
 
 ### Healthy Economy
@@ -42,7 +42,20 @@ food <- vroom::vroom("FoodExpenses.txt") |>
 ### Problems with Standard Regression
 
 ```{r}
+#Making Linear Model
+eqlm <- lm(eating ~ ., data = food)
 
+#Making Scatterplot of Birth Weight and Mother's Age 
+ggplot(data = food, mapping = aes(x = income, y = eating)) +
+  geom_point() +
+  geom_smooth(method = lm, se = F) +
+  labs(x = "Income in Thousands ($)",
+       y = "Eating Out ($)",
+       title = "Scatterplot")
+
+#Making an Added Variable Plot
+car::avPlot(eqlm, "income",
+            main = "Added-Variable Plot for Income")
 ```
 
 ### Validate Unequal Variance Model
