@@ -45,21 +45,123 @@ food <- vroom::vroom("FoodExpenses.txt") |>
 #Making Linear Model
 eqlm <- lm(eating ~ ., data = food)
 
-#Making Scatterplot of Birth Weight and Mother's Age 
-ggplot(data = food, mapping = aes(x = income, y = eating)) +
+#Making Scatterplot of Birth Weight and Mother's Age with a Prediction Interval
+preds <- predict(eqlm, interval = "prediction")
+plot_df <- food |>
+  mutate(
+    fit = preds[,1],
+    lwr = preds[,2],
+    upr = preds[,3]
+  )
+ggplot(data = plot_df, mapping = aes(x = income, y = eating)) +
   geom_point() +
-  geom_smooth(method = lm, se = F) +
+  geom_line(aes(y = fit), color = "blue", size = 1.125) +
+  geom_line(aes(y = lwr), color = "red", size = 1.125) + 
+  geom_line(aes(y = upr), color = "red", size = 1.125) +
   labs(x = "Income in Thousands ($)",
        y = "Eating Out ($)",
-       title = "Scatterplot")
+       title = "Scatterplot",
+       subtitle = "Income and Money Spent Eating Out")
 
-#Making an Added Variable Plot
-car::avPlot(eqlm, "income",
-            main = "Added-Variable Plot for Income")
+#Saving the Scatterplot
+ggsave("Scatterplot_SLR.png", width = 8, height = 6, dpi = 300)
+```
+
+```{r}
+#Checking Equal Variance Assumption
+stresids <- MASS::stdres(eqlm)
+ggplot(data = data.frame(fit = fitted(eqlm), res = stresids),
+       aes(x = fit, y = res)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "blue", size = 1.125) +
+  labs(x = "Fitted",
+       y = "Residuals")
+
+#Saving the Fitted Vs Residuals Plot
+ggsave("Fitted_VS_Residuals_SLR.png", width = 8, height = 6, dpi = 300)
+```
+
+```{r}
+#Running BP Test
+resid_df <- food |>
+  mutate(r = stresids) |>
+  select(-eating)
+lmtest::bptest(formula = r ~ ., data = resid_df)
 ```
 
 ### Validate Unequal Variance Model
 
-```{r}
+#### Linearity
 
+```{r}
+#Making Scatterplot of Birth Weight and Mother's Age
+ggplot(data = plot_df, mapping = aes(x = income, y = eating)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = F) + 
+  labs(x = "Income in Thousands ($)",
+       y = "Eating Out ($)",
+       title = "Scatterplot",
+       subtitle = "Income and Money Spent Eating Out")
+
+#Saving the Scatterplot
+ggsave("Scatterplot_UV.png", width = 8, height = 6, dpi = 300)
+```
+
+#### Independence
+
+With independence, we have to look at the method by which the data we used was collected. Given what we know about the dataset, there is no reason to believe that the amount spent on fast food by one household would affect the amount spent on fast food by another household. Given what we know, we are able to conclude independence.
+
+#### Normality
+
+```{r}
+#Fitting a Heteroskedastic Model
+uvlm <- gamlss::gamlss(eating ~ ., sigma.formula = ~income, data = food)
+
+#Getting the Standardized Residuals
+stresids <- residuals(uvlm, what = "z-scores")
+
+#Making Histogram
+ggplot() +
+  geom_histogram(aes(x = stresids, y = after_stat(density))) +
+  stat_function(
+    fun = dnorm,
+    args = list(mean = mean(stresids), sd = sd(stresids)),
+    color = "red",
+    linewidth = 1
+  ) +
+  labs(x = "Standardized Residuals",
+       y = "Density",
+       title = "Histogram of Standardized Residuals")
+
+#Saving the Histogram
+ggsave("Histogram_UV.png", width = 8, height = 6, dpi = 300)
+```
+
+```{r}
+#Running KS Test
+ks.test(stresids, "pnorm", mean = 0, sd = 1)
+```
+
+#### Equal Variance
+
+```{r}
+#Making Fitted Values Vs Standardized Residuals Plot
+ggplot(data = data.frame(fit = fitted(uvlm), res = stresids),
+       aes(x = fit, y = res)) +
+  geom_point() +
+  geom_hline(yintercept = 0, color = "blue", size = 1.125) +
+  labs(x = "Fitted",
+       y = "Residuals", 
+       title = "Fitted vs Residuals Plot") 
+
+#Saving the Fitted Vs Residuals Plot
+ggsave("Fitted_VS_Residuals_UV.png", width = 8, height = 6, dpi = 300)
+```
+
+```{r}
+#Running BP Test
+resid_df <- food |>
+  mutate(r = stresids) |>
+  select(-eating)
+lmtest::bptest(formula = r ~ ., data = resid_df)
 ```
