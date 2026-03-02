@@ -22,19 +22,135 @@ food <- vroom::vroom("FoodExpenses.txt") |>
 ### Relationship Between Income and Food Expenditures
 
 ```{r}
+food_gamlss <- gamlss::gamlss(eating ~ ., sigma.formula = ~income, data = food)
+summary(food_gamlss)
+```
 
+```{r}
+confint(food_gamlss, what = "mu")
+confint(food_gamlss, what = "sigma")
 ```
 
 ### Healthy Economy
 
 ```{r}
+b <- coef(food_gamlss, what = 'mu')['income']
 
+vc <- vcov(food_gamlss)
+se <- sqrt(vc['income', 'income'])
+
+zcrit <- qnorm(0.975)
+lower <- b - zcrit * se
+upper <- b + zcrit * se
+c(lower, upper)
 ```
 
 ### Predictions
 
 ```{r}
+med_income <- median(food$income)
 
+future_med <- med_income * (1.035)^5
+
+mu_med <- predict(food_gamlss,
+        newdata = data.frame(income = med_income),
+        what = 'mu',
+        type = 'response')
+
+sig_med <- predict(food_gamlss,
+        newdata = data.frame(income = med_income),
+        what = 'sigma',
+        type = 'response')
+
+mu_med_f <- predict(food_gamlss,
+        newdata = data.frame(income = future_med),
+        what = 'mu',
+        type = 'response')
+
+sig_med_f <- predict(food_gamlss,
+        newdata = data.frame(income = future_med),
+        what = "sigma",
+        type = "response")
+
+lower_med <- mu_med - zcrit * sig_med
+upper_med <- mu_med + zcrit * sig_med
+
+lower_med_f <- mu_med_f - zcrit * sig_med_f
+upper_med_f <- mu_med_f + zcrit * sig_med_f
+
+c(lower_med, upper_med)
+c(lower_med_f, upper_med_f)
+```
+
+```{r}
+q1_income <- quantile(food$income, probs = .25)
+
+future_q1 <- q1_income * (1.035)^5
+
+
+mu_q1 <- predict(food_gamlss,
+        newdata = data.frame(income = q1_income),
+        what = 'mu',
+        type = 'response')
+
+sig_q1 <- predict(food_gamlss,
+        newdata = data.frame(income = q1_income),
+        what = 'sigma',
+        type = 'response')
+
+mu_q1_f <- predict(food_gamlss,
+        newdata = data.frame(income = future_q1),
+        what = 'mu',
+        type = 'response')
+
+sig_q1_f <- predict(food_gamlss,
+        newdata = data.frame(income = future_q1),
+        what = 'sigma',
+        type = 'response')
+
+lower_q1 <- mu_q1 - zcrit * sig_q1
+upper_q1 <- mu_q1 + zcrit * sig_q1
+
+lower_q1_f <- mu_q1_f - zcrit * sig_q1_f
+upper_q1_f <- mu_q1_f + zcrit * sig_q1_f
+
+c(lower_q1, upper_q1)
+c(lower_q1_f, upper_q1_f)
+```
+
+```{r}
+q3_income <- quantile(food$income, probs = .75)
+
+future_q3 <- q3_income * (1.035)^5
+
+mu_q3 <- predict(food_gamlss,
+        newdata = data.frame(income = q3_income),
+        what = 'mu',
+        type = 'response')
+
+sig_q3 <- predict(food_gamlss,
+        newdata = data.frame(income = q3_income),
+        what = 'sigma',
+        type = 'response')
+
+mu_q3_f <- predict(food_gamlss,
+        newdata = data.frame(income = future_q3),
+        what = 'mu',
+        type = 'response')
+
+sig_q3_f <- predict(food_gamlss,
+        newdata = data.frame(income = future_q3),
+        what = 'sigma',
+        type = 'response')
+
+lower_q3 <- mu_q3 - zcrit * sig_q3
+upper_q3 <- mu_q3 + zcrit * sig_q3
+
+lower_q3_f <- mu_q3_f - zcrit * sig_q3_f
+upper_q3_f <- mu_q3_f + zcrit * sig_q3_f
+
+c(lower_q3, upper_q3)
+c(lower_q3_f, upper_q3_f)
 ```
 
 ## Problem 3 (Stockton)
